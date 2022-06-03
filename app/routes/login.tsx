@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Layout } from "~/components/layout";
 import { FormField } from "~/components/form-field";
 import { json, redirect } from "@remix-run/node";
+import { useActionData } from "@remix-run/react";
 import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import {
   validateEmail,
@@ -74,12 +75,16 @@ export const action: ActionFunction = async ({ request }) => {
 };
 
 export default function Login() {
+  const actionData = useActionData();
+  const firstLoad = useRef(true);
+  const [errors, setErrors] = useState(actionData?.errors || {});
+  const [formError, setFormError] = useState(actionData?.error || "");
   const [action, setAction] = useState("login");
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    firstName: "",
-    lastName: "",
+    email: actionData?.fields?.email || "",
+    password: actionData?.fields?.password || "",
+    firstName: actionData?.fields?.lastName || "",
+    lastName: actionData?.fields?.firstName || "",
   });
 
   // Updates the form data when an input changes
@@ -89,6 +94,31 @@ export default function Login() {
   ) => {
     setFormData((form) => ({ ...form, [field]: event.target.value }));
   };
+
+  useEffect(() => {
+    // Clear the form if we switch forms
+    if (!firstLoad.current) {
+      const newState = {
+        email: "",
+        password: "",
+        firstName: "",
+        lastName: "",
+      };
+      setErrors(newState);
+      setFormError("");
+      setFormData(newState);
+    }
+  }, [action]);
+
+  useEffect(() => {
+    if (!firstLoad.current) {
+      setFormError("");
+    }
+  }, [formData]);
+
+  useEffect(() => {
+    firstLoad.current = false;
+  }, []);
 
   return (
     <Layout>
@@ -110,11 +140,15 @@ export default function Login() {
         </p>
 
         <form method="post" className="rounded-2xl bg-gray-200 p-6 w-96">
+          <div className="text-xs font-semibold text-center tracking-wide text-red-500 w-full">
+            {formError}
+          </div>
           <FormField
             htmlFor="email"
             label="Email"
             value={formData.email}
             onChange={(e) => handleInputChange(e, "email")}
+            error={errors?.email}
           />
           <FormField
             htmlFor="password"
@@ -122,6 +156,7 @@ export default function Login() {
             label="Password"
             value={formData.password}
             onChange={(e) => handleInputChange(e, "password")}
+            error={errors?.password}
           />
           {action === "register" && (
             <>
@@ -130,12 +165,14 @@ export default function Login() {
                 label="First Name"
                 onChange={(e) => handleInputChange(e, "firstName")}
                 value={formData.firstName}
+                error={errors?.firstName}
               />
               <FormField
                 htmlFor="lastName"
                 label="Last Name"
                 onChange={(e) => handleInputChange(e, "lastName")}
                 value={formData.lastName}
+                error={errors?.lastName}
               />
             </>
           )}
