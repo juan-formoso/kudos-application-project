@@ -1,13 +1,14 @@
 // This creates the side panel that will contain the list of users. The component is static though, which means it does not perform any actions or vary in any way.
+import type { User } from "@prisma/client";
 
-export function UserPanel() {
+export function UserPanel({ users }: { users: User[] }) {
   return (
     <div className="w-1/6 bg-gray-200 flex flex-col">
       <div className="text-center bg-gray-300 h-20 flex items-center justify-center">
         <h2 className="text-xl text-blue-600 font-semibold">My Team</h2>
       </div>
       <div className="flex-1 overflow-y-scroll py-4 flex flex-col gap-y-10">
-        <p>Users go here!</p>
+        <p>Users go here</p>
       </div>
       <div className="text-center p-6 bg-gray-300">
         <button
